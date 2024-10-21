@@ -3,52 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Загрузка и перевод PDF</title>
-    <link rel="stylesheet" href="static/css/styles.css">
+    <title>Перевод PDF</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
-    <h1>Загрузка PDF файла для перевода</h1>
-    <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" name="file" accept="application/pdf" required>
-        <button type="submit">Загрузить файл</button>
-    </form>
-
-    <h2>Скачать переведенный файл</h2>
-    <button id="downloadButton" style="display:none;">Скачать переведенный файл</button>
+    <h1>Перевод PDF-файла</h1>
+    <input type="file" id="pdfFile" accept=".pdf" />
+    <button id="uploadButton">Загрузить и перевести</button>
+    <div id="result"></div>
 
     <script>
-        document.getElementById('uploadForm').onsubmit = async function(event) {
-            event.preventDefault(); // Предотвращаем отправку формы
+        document.getElementById('uploadButton').addEventListener('click', async () => {
+            const fileInput = document.getElementById('pdfFile');
+            const file = fileInput.files[0];
 
-            const formData = new FormData(this);
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
-            });
-
-            const result = await response.json();
-            alert('Файл загружен и переведен: ' + result.translate_pdf);
-            document.getElementById('downloadButton').style.display = 'block'; // Показываем кнопку скачивания
-            document.getElementById('downloadButton').dataset.filename = result.translate_pdf; // Сохраняем имя файла
-        };
-
-        document.getElementById('downloadButton').onclick = async function() {
-            const filename = this.dataset.filename;
-            const response = await fetch(`/download/${filename}`);
-            if (response.ok) {
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(url);
-            } else {
-                alert('Ошибка при скачивании файла');
+            if (!file) {
+                alert("Пожалуйста, выберите PDF-файл.");
+                return;
             }
-        };
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/translate_PDF/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Ошибка при загрузке файла');
+                }
+
+                const data = await response.json();
+                const filename = data.filename;
+
+
+                const downloadLink = document.createElement('a');
+                downloadLink.href = `/translate_PDF/download/${filename}`;
+                downloadLink.innerText = "Скачать переведённый PDF";
+                downloadLink.download = filename;
+                document.getElementById('result').innerHTML = '';
+                document.getElementById('result').appendChild(downloadLink);
+            } catch (error) {
+                console.error('Ошибка:', error);
+                document.getElementById('result').innerText = 'Произошла ошибка при загрузке файла.';
+            }
+        });
     </script>
 </body>
 </html>
