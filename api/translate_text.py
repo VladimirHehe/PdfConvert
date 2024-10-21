@@ -1,8 +1,7 @@
 import pymupdf
-import asyncio
+import io
 import translators as ts
 import fitz
-from fastapi.responses import FileResponse
 from api.s3_client import upload_to_s3
 
 
@@ -19,9 +18,11 @@ async def detect_and_transl_text(file):
 
 async def create_pdf(query_text, file):
     translated_pdf_filename = f"trans_{str(file.filename)[:-4]}.pdf"
+    pdf_buffer = io.BytesIO()
     with fitz.open() as pdf_writer:
         pdf_writer.new_page()
         pdf_writer[-1].insert_text((72, 72), query_text, fontsize=11)
-        pdf_writer.save(translated_pdf_filename)
-        upload_to_s3(translated_pdf_filename)#    s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME, file.filename)AttributeError: 'str' object has no attribute 'file'
+        pdf_writer.save(pdf_buffer)
+    pdf_buffer.seek(0)
+    await upload_to_s3(pdf_buffer, translated_pdf_filename)
     return translated_pdf_filename

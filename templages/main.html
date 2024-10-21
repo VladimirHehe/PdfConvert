@@ -3,40 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Загрузка PDF файла</title>
+    <title>Загрузка и перевод PDF</title>
 </head>
 <body>
-    <h1>Загрузите PDF файл для перевода</h1>
-    <form id="upload-form" enctype="multipart/form-data">
+    <h1>Загрузка PDF файла для перевода</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
         <input type="file" name="file" accept="application/pdf" required>
-        <button type="submit">Загрузить</button>
+        <button type="submit">Загрузить файл</button>
     </form>
-    <div id="result"></div>
+
+    <h2>Скачать переведенный файл</h2>
+    <button id="downloadButton" style="display:none;">Скачать переведенный файл</button>
 
     <script>
-        document.getElementById('upload-form').onsubmit = async function(event) {
-            event.preventDefault(); // Предотвращаем перезагрузку страницы
+        document.getElementById('uploadForm').onsubmit = async function(event) {
+            event.preventDefault(); // Предотвращаем отправку формы
 
             const formData = new FormData(this);
-            const response = await fetch('/translate/', {
+            const response = await fetch('/main/upload', {
                 method: 'POST',
                 body: formData
             });
 
-            // Проверяем, был ли ответ успешным
+            const result = await response.json();
+            alert('Файл загружен и переведен: ' + result.translate_pdf);
+            document.getElementById('downloadButton').style.display = 'block'; // Показываем кнопку скачивания
+            document.getElementById('downloadButton').dataset.filename = result.translate_pdf; // Сохраняем имя файла
+        };
+
+        document.getElementById('downloadButton').onclick = async function() {
+            const filename = this.dataset.filename;
+            const response = await fetch(`/download/${filename}`);
             if (response.ok) {
-                const blob = await response.blob(); // Получаем файл как Blob
-                const url = window.URL.createObjectURL(blob); // Создаем URL для Blob
-                const a = document.createElement('a'); // Создаем элемент <a>
-                a.href = url; // Устанавливаем URL
-                a.download = 'translated.pdf'; // Устанавливаем имя файла
-                document.body.appendChild(a); // Добавляем элемент на страницу
-                a.click(); // Имитируем клик для скачивания
-                a.remove(); // Удаляем элемент
-                window.URL.revokeObjectURL(url); // Освобождаем память
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
             } else {
-                const result = await response.json();
-                document.getElementById('result').innerText = `Ошибка: ${result.detail}`;
+                alert('Ошибка при скачивании файла');
             }
         };
     </script>

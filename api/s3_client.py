@@ -1,6 +1,10 @@
+import io
 import boto3
 import botocore
 from botocore.exceptions import NoCredentialsError
+from fastapi import UploadFile
+from fastapi.responses import FileResponse
+
 
 from config import (AWS_ACCESS_KEY, AWS_REGION, AWS_SECRET_KEY, AWS_BUCKET_NAME)
 
@@ -13,23 +17,29 @@ s3_client = boto3.client(
 )
 
 
-def upload_to_s3(file):
+async def upload_to_s3(file: UploadFile, filename):
     try:
-        s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME, file.filename)
+        if isinstance(file, io.BytesIO):
+            file_content = file.read()
+        else:
+            file_content = await file.read()
+        file_obj = io.BytesIO(file_content)
+        s3_client.upload_fileobj(file_obj, AWS_BUCKET_NAME, filename)
+        return file
     except NoCredentialsError:
         return "Credentials not available"
-    return file
 
 
-def download_from_s3(file_name: str):
+async def download_from_s3(file_name: str):
     try:
-        s3_client.download_file(AWS_BUCKET_NAME, file_name, f"C:/Users/marmelad/Desktop/tetrika/{file_name}")
-        return f"File {file_name} has been downloaded successfully"
+        local_path = f"C:/Users/marmelad/Desktop/tetrika/{file_name}"
+        s3_client.download_file(AWS_BUCKET_NAME, file_name, local_path)
+        return FileResponse(local_path)
     except botocore.exceptions.ClientError as e:
         return f"Error downloading file: {e}"
 
 
-def delete_from_s3(file_name):
+async def delete_from_s3(file_name):
     try:
         s3_client.delete_object(Bucket=AWS_BUCKET_NAME, Key=file_name)
         return f"File {file_name} has been deleted successfully"
