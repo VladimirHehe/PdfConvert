@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Загрузка и перевод PDF</title>
+    <link rel="stylesheet" href="static/css/styles.css">
 </head>
 <body>
     <h1>Загрузка PDF файла для перевода</h1>
@@ -20,7 +21,7 @@
             event.preventDefault(); // Предотвращаем отправку формы
 
             const formData = new FormData(this);
-            const response = await fetch('/main/upload', {
+            const response = await fetch('/upload', {
                 method: 'POST',
                 body: formData
             });
