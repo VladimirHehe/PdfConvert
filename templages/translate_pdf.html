@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Перевод PDF файлов</title>
+    <style>body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+input[type="file"] {
+    margin-bottom: 10px;
+}
+
+button {
+    padding: 10px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+.hidden {
+    display: none;
+}
+
+#downloadLink {
+    margin-top: 20px;
+    text-align: center;
+}</style>
+</head>
+<body>
+    <div class="container">
+        <h1>Перевод PDF файлов</h1>
+        <form id="uploadForm">
+            <input type="file" id="fileInput" accept=".pdf" required>
+            <button type="submit">Загрузить и перевести</button>
+        </form>
+        <div id="downloadLink" class="hidden">
+            <a id="downloadButton" href="#" download>Скачать переведенный файл</a>
+        </div>
+    </div>
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const fileInput = document.getElementById('fileInput');
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        try {
+            const response = await fetch('/translate_PDF/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error('Ошибка при загрузке файла');
+            }
+
+            const data = await response.json();
+            const downloadLink = document.getElementById('downloadLink');
+            const downloadButton = document.getElementById('downloadButton');
+
+            downloadButton.href = `/translate_PDF/download/${data.filename}`;
+            downloadLink.classList.remove('hidden');
+        } catch (error) {
+            alert(error.message);
+        }
+    });
+    </script>
+</body>
+
+</html>
+{% endblock %}

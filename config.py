@@ -12,3 +12,5 @@ DB_PASS = os.environ.get("DB_PASS")
 DB_HOST = os.environ.get("DB_HOST")
 DB_NAME = os.environ.get("DB_NAME")
 DB_PORT = os.environ.get("DB_PORT")
+
+secret_key_CAPTCHA = os.environ.get("SECRET_KEY_CAPTCHA")

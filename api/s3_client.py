@@ -19,12 +19,12 @@ s3_client = boto3.client(
 )
 
 
-async def upload_to_s3(file: UploadFile, filename, session: AsyncSession = Depends(async_session)):
+async def upload_to_s3(file: UploadFile, filename: str,):
     try:
         file_content = await file.read() if not isinstance(file, io.BytesIO) else file.read()
         file_obj = io.BytesIO(file_content)
         s3_client.upload_fileobj(file_obj, AWS_BUCKET_NAME, filename)
-        await push_pathS3_in_DB(AWS_BUCKET_NAME, filename)
+        # await push_pathS3_in_DB(AWS_BUCKET_NAME, filename)
         return filename
     except NoCredentialsError:
         raise HTTPException(status_code=403, detail="Credentials not available")
@@ -39,7 +39,7 @@ async def download_from_s3(file_name: str):
         return f"Error downloading file: {e}"
 
 
-async def delete_from_s3(file_name):
+async def delete_from_s3(file_name:str):
     try:
         s3_client.delete_object(Bucket=AWS_BUCKET_NAME, Key=file_name)
         return f"File {file_name} has been deleted successfully"

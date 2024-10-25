@@ -4,9 +4,10 @@ import translators as ts
 import fitz
 from api.s3_client import upload_to_s3
 from api.s3_client import s3_client, AWS_BUCKET_NAME
+from docx import Document
 
 
-async def detect_and_transl_text(file_name):
+async def detect_and_transl_text_pdf(file_name):
     file_obj = s3_client.get_object(Bucket=AWS_BUCKET_NAME, Key=file_name)
     file_content = file_obj['Body'].read()
     with pymupdf.open(stream=file_content) as doc:
@@ -29,3 +30,15 @@ async def create_pdf(query_text, file_name):
     pdf_buffer.seek(0)
     await upload_to_s3(pdf_buffer, translated_pdf_filename)
     return translated_pdf_filename
+
+
+async def create_word(query_text: str, file_name: str):
+    translated_word_filename = f"trans_{str(file_name)[:-4]}.docx"
+    word_buffer = io.BytesIO()
+    with fitz.open() as word_writer:
+        word_writer = Document()
+        word_writer.add_paragraph(query_text)
+        word_writer.save(translated_word_filename)
+    word_buffer.seek(0)
+    await upload_to_s3(word_buffer, translated_word_filename)
+    return translated_word_filename
