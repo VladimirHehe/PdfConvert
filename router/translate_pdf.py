@@ -1,6 +1,6 @@
 from fastapi import APIRouter, File, UploadFile, Request, HTTPException
 from fastapi.responses import HTMLResponse
-from starlette.responses import FileResponse
+from starlette.responses import FileResponse, StreamingResponse
 from starlette.templating import Jinja2Templates
 
 from api.translate_text_pdf import detect_and_transl_text_pdf, create_pdf
@@ -34,8 +34,14 @@ async def translate_pdf_file(file: UploadFile = File(...)):
 @router_translate_PDF.get("/download/{filename}", tags=['Скачивание файла'])
 async def download_translate_pdf(filename: str):
     try:
-        local_path = await download_from_s3(filename)
-        return FileResponse(local_path, media_type="application/pdf",
-                            headers={"Content-Disposition": f"attachment; filename={filename}"})
+        file_stream = await download_from_s3(filename)
+        if file_stream is None:
+            raise HTTPException(status_code=404, detail="File not found")
+
+        return StreamingResponse(
+            file_stream,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
