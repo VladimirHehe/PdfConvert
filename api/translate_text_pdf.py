@@ -26,7 +26,7 @@ def split_text(text, max_length=1000):
         yield ' '.join(current_part)
 
 
-async def detect_and_transl_text_pdf(file_name) -> str:
+async def detect_and_transl_text_pdf(file_name, target_language: str) -> str:
     """Определение текса, взятие из файла и перевод"""
     file_obj = s3_client.get_object(Bucket=AWS_BUCKET_NAME, Key=file_name)
     file_content = file_obj['Body'].read()
@@ -37,7 +37,7 @@ async def detect_and_transl_text_pdf(file_name) -> str:
         trans_text = ts.translate_text(query_text=part,
                                        translator='bing',
                                        from_language='auto',
-                                       to_language='en')
+                                       to_language=target_language)
         translated_parts.append(trans_text)
 
     final_translated_text = '\n'.join(translated_parts)

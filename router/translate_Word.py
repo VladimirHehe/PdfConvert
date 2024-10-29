@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile, Request, HTTPException
+from fastapi import APIRouter, File, UploadFile, Request, HTTPException, Form
 from fastapi.responses import HTMLResponse
 from starlette.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -19,11 +19,11 @@ async def read_root_main(request: Request):
 
 
 @router_translate_Word.post("/upload", tags=['Загрузка файла'])
-async def translate_word_file(file: UploadFile = File(...)):
+async def translate_word_file(file: UploadFile = File(...), language: str = Form(...)):
     """Загрузка файла Word + перевод + загрузка в s3"""
     try:
         await upload_to_s3(file, file.filename)
-        translate_text = await detect_and_transl_text_word(file.filename)
+        translate_text = await detect_and_transl_text_word(file.filename, language)
         translate_word_filename = await create_word(translate_text, file.filename)
         await delete_from_s3(file.filename)
         return {'filename': translate_word_filename}

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile, Request, HTTPException
+from fastapi import APIRouter, File, UploadFile, Request, HTTPException, Form
 from fastapi.responses import HTMLResponse
 from starlette.responses import FileResponse, StreamingResponse
 from starlette.templating import Jinja2Templates
@@ -20,11 +20,11 @@ async def read_root_main(request: Request):
 
 
 @router_translate_PDF.post("/upload", tags=['Загрузка файла'])
-async def translate_pdf_file(file: UploadFile = File(...)):
+async def translate_pdf_file(file: UploadFile = File(...), language: str = Form(...)):
     """Загрузка файла PDF + перевод + загрузка в s3"""
     try:
         await upload_to_s3(file, file.filename)
-        translate_text = await detect_and_transl_text_pdf(file.filename)
+        translate_text = await detect_and_transl_text_pdf(file.filename, language)
         translate_pdf_filename = await create_pdf(translate_text, file.filename)
         await delete_from_s3(file.filename)
         return {'filename': translate_pdf_filename}
