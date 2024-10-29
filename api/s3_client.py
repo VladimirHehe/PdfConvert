@@ -16,6 +16,7 @@ s3_client = boto3.client(
 
 
 async def upload_to_s3(file: UploadFile, filename: str,):
+    """Загрузка в s3"""
     try:
         file_content = await file.read() if not isinstance(file, io.BytesIO) else file.read()
         file_obj = io.BytesIO(file_content)
@@ -27,6 +28,7 @@ async def upload_to_s3(file: UploadFile, filename: str,):
 
 
 async def download_from_s3(file_name: str):
+    """Скачивание с s3 по имени файла"""
     try:
         file_stream = BytesIO()
         s3_client.download_fileobj(AWS_BUCKET_NAME, file_name, file_stream)
@@ -37,6 +39,7 @@ async def download_from_s3(file_name: str):
 
 
 async def delete_from_s3(file_name: str):
+    """Удаление из s3 по имени файла"""
     try:
         s3_client.delete_object(Bucket=AWS_BUCKET_NAME, Key=file_name)
         return f"File {file_name} has been deleted successfully"

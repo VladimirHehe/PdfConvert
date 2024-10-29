@@ -21,6 +21,7 @@ async def read_root_main(request: Request):
 
 @router_translate_PDF.post("/upload", tags=['Загрузка файла'])
 async def translate_pdf_file(file: UploadFile = File(...)):
+    """Загрузка файла PDF + перевод + загрузка в s3"""
     try:
         await upload_to_s3(file, file.filename)
         translate_text = await detect_and_transl_text_pdf(file.filename)
@@ -33,6 +34,7 @@ async def translate_pdf_file(file: UploadFile = File(...)):
 
 @router_translate_PDF.get("/download/{filename}", tags=['Скачивание файла'])
 async def download_translate_pdf(filename: str):
+    """Скачать файл PDF"""
     try:
         file_stream = await download_from_s3(filename)
         if file_stream is None:

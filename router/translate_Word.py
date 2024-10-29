@@ -1,6 +1,6 @@
 from fastapi import APIRouter, File, UploadFile, Request, HTTPException
 from fastapi.responses import HTMLResponse
-from starlette.responses import FileResponse, StreamingResponse
+from starlette.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from api.translate_text_word import create_word, detect_and_transl_text_word
@@ -20,6 +20,7 @@ async def read_root_main(request: Request):
 
 @router_translate_Word.post("/upload", tags=['Загрузка файла'])
 async def translate_word_file(file: UploadFile = File(...)):
+    """Загрузка файла Word + перевод + загрузка в s3"""
     try:
         await upload_to_s3(file, file.filename)
         translate_text = await detect_and_transl_text_word(file.filename)
@@ -32,6 +33,7 @@ async def translate_word_file(file: UploadFile = File(...)):
 
 @router_translate_Word.get("/download/{filename}", tags=['Скачивание файла'])
 async def download_translate_word(filename: str):
+    """Скачать файл Word"""
     try:
         file_stream = await download_from_s3(filename)
         if file_stream is None:

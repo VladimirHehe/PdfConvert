@@ -13,6 +13,7 @@ Session_factory = async_sessionmaker(bind=engine, class_=AsyncSession, )
 
 
 async def async_session() -> AsyncGenerator[AsyncSession, None]:
+    """Асинхронная функция get_session"""
     async with Session_factory() as session:
         yield session
 
