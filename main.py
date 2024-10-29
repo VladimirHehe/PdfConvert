@@ -15,7 +15,7 @@ async def read_root_main(request: Request):
     return templates.TemplateResponse("base.html", {"request": request})
 
 app.include_router(router_translate_Word)
-app.include_router(router_translate_PDF)
+app.include_router(router_translate_PDF)# Есть баг с вставкой текта в файл и его скачкой. в загрузках норм скачен, а в браузере криво открывается
 
 if __name__ == '__main__':
     uvicorn.run(app, host="127.0.0.1", port=8000)
