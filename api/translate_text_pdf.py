@@ -4,7 +4,8 @@ import translators as ts
 import fitz
 from api.s3_client import upload_to_s3
 from api.s3_client import s3_client, AWS_BUCKET_NAME
-from docx import Document
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 
 
 def split_text(text, max_length=1000):
@@ -48,10 +49,39 @@ async def create_pdf(query_text, file_name):
     """Создание файла pdf и выгрузка в s3"""
     translated_pdf_filename = f"trans_{str(file_name)[:-4]}.pdf"
     pdf_buffer = io.BytesIO()
-    with fitz.open() as pdf_writer:
-        pdf_writer.new_page()
-        pdf_writer[-1].insert_text((72, 72), query_text, fontsize=11)
-        pdf_writer.save(pdf_buffer)
+
+    # Создаем PDF-канвас
+    c = canvas.Canvas(pdf_buffer, pagesize=letter)
+    width, height = letter
+
+    x = 72
+    y = height - 72
+    line_height = 14
+
+    words = query_text.split()
+    current_line = ""
+
+    for word in words:
+
+        if c.stringWidth(current_line + " " + word) > (width - 2 * x):
+
+            c.drawString(x, y, current_line)
+            y -= line_height
+
+            if y < 72:
+                c.showPage()
+                y = height - 72  # Сбрасываем y-координату для новой страницы
+
+            current_line = word  # Начинаем новую строку с текущего слова
+        else:
+            # Если помещается, добавляем слово к текущей строке
+            current_line += " " + word if current_line else word
+
+    if current_line:
+        c.drawString(x, y, current_line)
+
+    c.save()
+
     pdf_buffer.seek(0)
     await upload_to_s3(pdf_buffer, translated_pdf_filename)
     return translated_pdf_filename
